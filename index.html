@@ -3,237 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Gallery</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>Photo Gallery</title>
 
 <style>
-:root{
-    --bg:#0f172a;
-    --card:#1e293b;
-    --accent:#3b82f6;
-    --text:#f8fafc;
-    --muted:#94a3b8;
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
 }
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+/* HEADER */
+header {
+    text-align: center;
+    padding: 40px;
 }
 
-body{
-    font-family:'Inter',sans-serif;
-    background:var(--bg);
-    color:var(--text);
+h1 {
+    margin-bottom: 10px;
 }
 
-header{
-    padding:80px 20px;
-    text-align:center;
+/* CONTROLS */
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px;
 }
 
-header h1{
-    font-size:4rem;
-    margin-bottom:15px;
+button, label {
+    background: #1e293b;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
 }
 
-header p{
-    color:var(--muted);
-    font-size:1.1rem;
+button:hover, label:hover {
+    background: #3b82f6;
 }
 
-.controls{
-    max-width:1200px;
-    margin:auto;
-    display:flex;
-    gap:15px;
-    justify-content:center;
-    flex-wrap:wrap;
-    padding:20px;
+/* HIDE FILE INPUT */
+input[type="file"] {
+    display: none;
 }
 
-button{
-    border:none;
-    padding:12px 20px;
-    border-radius:50px;
-    background:var(--card);
-    color:white;
-    cursor:pointer;
-    transition:.3s;
+/* GALLERY */
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    padding: 20px;
 }
 
-button:hover,
-button.active{
-    background:var(--accent);
+.item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    cursor: pointer;
 }
 
-.search{
-    width:300px;
-    max-width:90%;
-    padding:12px;
-    border:none;
-    border-radius:50px;
-    background:var(--card);
-    color:white;
+.item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: 0.3s;
 }
 
-.gallery{
-    column-count:4;
-    column-gap:15px;
-    max-width:1400px;
-    margin:auto;
-    padding:20px;
+.item:hover img {
+    transform: scale(1.05);
 }
 
-.gallery-item{
-    position:relative;
-    margin-bottom:15px;
-    overflow:hidden;
-    border-radius:18px;
-    cursor:pointer;
-    break-inside:avoid;
+/* LIGHTBOX */
+.lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    justify-content: center;
+    align-items: center;
 }
 
-.gallery-item img{
-    width:100%;
-    display:block;
-    transition:.4s;
+.lightbox img {
+    max-width: 90%;
+    max-height: 90%;
 }
 
-.gallery-item:hover img{
-    transform:scale(1.05);
-}
-
-.overlay{
-    position:absolute;
-    inset:0;
-    background:linear-gradient(
-      transparent,
-      rgba(0,0,0,.8)
-    );
-    opacity:0;
-    transition:.3s;
-    display:flex;
-    align-items:flex-end;
-    padding:20px;
-}
-
-.gallery-item:hover .overlay{
-    opacity:1;
-}
-
-.overlay h3{
-    font-size:1rem;
-}
-
-.lightbox{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.95);
-    display:none;
-    justify-content:center;
-    align-items:center;
-    z-index:1000;
-}
-
-.lightbox img{
-    max-width:90%;
-    max-height:90%;
-    border-radius:10px;
-}
-
-.close{
-    position:absolute;
-    top:25px;
-    right:35px;
-    font-size:40px;
-    cursor:pointer;
-}
-
-@media(max-width:1000px){
-    .gallery{
-        column-count:3;
-    }
-}
-
-@media(max-width:700px){
-    .gallery{
-        column-count:2;
-    }
-
-    header h1{
-        font-size:2.5rem;
-    }
-}
-
-@media(max-width:500px){
-    .gallery{
-        column-count:1;
-    }
+.close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 40px;
+    cursor: pointer;
 }
 </style>
 </head>
+
 <body>
 
 <header>
-    <h1>Photo Gallery</h1>
-    <p>Capture memories. Organize albums. Showcase moments.</p>
+    <h1>📸 My Photo Gallery</h1>
+    <p>Upload and view your memories</p>
 </header>
 
 <div class="controls">
-    <button class="active" data-filter="all">All</button>
-    <button data-filter="travel">Travel</button>
-    <button data-filter="nature">Nature</button>
-    <button data-filter="family">Family</button>
 
-    <input
-        class="search"
-        type="text"
-        placeholder="Search photos..."
-        id="search"
-    >
-</div>
+    <!-- Upload Button -->
+    <label for="upload">+ Upload Image</label>
+    <input type="file" id="upload" accept="image/*">
 
-<div class="gallery" id="gallery">
-
-    <div class="gallery-item" data-category="travel" data-title="Tokyo">
-        <img src="images/travel1.jpg">
-        <div class="overlay">
-            <h3>Tokyo</h3>
-        </div>
-    </div>
-
-    <div class="gallery-item" data-category="nature" data-title="Mountain">
-        <img src="images/nature1.jpg">
-        <div class="overlay">
-            <h3>Mountain</h3>
-        </div>
-    </div>
-
-    <div class="gallery-item" data-category="family" data-title="Family Day">
-        <img src="images/family1.jpg">
-        <div class="overlay">
-            <h3>Family Day</h3>
-        </div>
-    </div>
-
-    <div class="gallery-item" data-category="travel" data-title="Singapore">
-        <img src="images/travel2.jpg">
-        <div class="overlay">
-            <h3>Singapore</h3>
-        </div>
-    </div>
-
-    <div class="gallery-item" data-category="nature" data-title="Forest">
-        <img src="images/nature2.jpg">
-        <div class="overlay">
-            <h3>Forest</h3>
-        </div>
-    </div>
+    <button onclick="clearGallery()">Clear</button>
 
 </div>
 
+<div class="gallery" id="gallery"></div>
+
+<!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox">
     <span class="close">&times;</span>
     <img id="lightboxImg">
@@ -241,77 +128,56 @@ button.active{
 
 <script>
 
-const buttons = document.querySelectorAll("button");
-const photos = document.querySelectorAll(".gallery-item");
-const search = document.getElementById("search");
-
-buttons.forEach(btn=>{
-    btn.addEventListener("click",()=>{
-
-        buttons.forEach(b=>b.classList.remove("active"));
-        btn.classList.add("active");
-
-        const filter = btn.dataset.filter;
-
-        photos.forEach(photo=>{
-
-            if(
-                filter==="all" ||
-                photo.dataset.category===filter
-            ){
-                photo.style.display="block";
-            }else{
-                photo.style.display="none";
-            }
-
-        });
-
-    });
-});
-
-search.addEventListener("keyup",()=>{
-
-    const value = search.value.toLowerCase();
-
-    photos.forEach(photo=>{
-
-        const title = photo.dataset.title.toLowerCase();
-
-        if(title.includes(value)){
-            photo.style.display="block";
-        }else{
-            photo.style.display="none";
-        }
-
-    });
-
-});
-
+const upload = document.getElementById("upload");
+const gallery = document.getElementById("gallery");
 const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightboxImg");
 
-photos.forEach(photo=>{
+// LOAD IMAGE FROM DEVICE
+upload.addEventListener("change", function () {
 
-    photo.addEventListener("click",()=>{
+    const file = this.files[0];
+    if (!file) return;
 
-        lightbox.style.display="flex";
-        lightboxImg.src =
-            photo.querySelector("img").src;
+    const reader = new FileReader();
 
-    });
+    reader.onload = function (e) {
 
+        const div = document.createElement("div");
+        div.classList.add("item");
+
+        const img = document.createElement("img");
+        img.src = e.target.result;
+
+        div.appendChild(img);
+        gallery.appendChild(div);
+
+        // click to open lightbox
+        div.addEventListener("click", () => {
+            lightbox.style.display = "flex";
+            lightboxImg.src = img.src;
+        });
+
+    };
+
+    reader.readAsDataURL(file);
 });
 
-document.querySelector(".close")
-.addEventListener("click",()=>{
-    lightbox.style.display="none";
-});
+// LIGHTBOX CLOSE
+document.querySelector(".close").onclick = () => {
+    lightbox.style.display = "none";
+};
 
-lightbox.addEventListener("click",(e)=>{
-    if(e.target===lightbox){
-        lightbox.style.display="none";
+lightbox.onclick = (e) => {
+    if (e.target === lightbox) {
+        lightbox.style.display = "none";
     }
-});
+};
+
+// CLEAR GALLERY
+function clearGallery() {
+    gallery.innerHTML = "";
+}
 
 </script>
 
