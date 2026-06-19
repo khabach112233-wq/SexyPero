@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Stick Fighter Improved</title>
+<title>Stick Fighter AI</title>
 <style>
   body {
     margin: 0;
@@ -26,7 +26,7 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 class Fighter {
-  constructor(x, color) {
+  constructor(x, color, isAI = false) {
     this.x = x;
     this.y = 300;
     this.vy = 0;
@@ -38,7 +38,9 @@ class Fighter {
     this.moving = false;
     this.punching = false;
     this.punchTimer = 0;
-    this.facing = 1; // 1 right, -1 left
+    this.facing = 1;
+
+    this.isAI = isAI;
   }
 
   update() {
@@ -75,24 +77,22 @@ class Fighter {
     ctx.arc(this.x, this.y - 40, 10, 0, Math.PI * 2);
     ctx.stroke();
 
-    // body (lean forward when running)
+    // body
     ctx.beginPath();
     ctx.moveTo(this.x, this.y - 30);
     ctx.lineTo(this.x + this.facing * tilt, this.y);
     ctx.stroke();
 
-    // legs (running animation)
+    // legs
     ctx.beginPath();
     if (this.moving) {
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(this.x - this.facing * 15, this.y + 20);
-
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(this.x + this.facing * 15, this.y + 20);
     } else {
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(this.x - 10, this.y + 20);
-
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(this.x + 10, this.y + 20);
     }
@@ -136,29 +136,49 @@ class Fighter {
       opponent.health -= 10;
     }
   }
+
+  // 🤖 AI logic
+  ai(target) {
+    if (!this.isAI) return;
+
+    let dist = target.x - this.x;
+
+    // face player
+    this.facing = dist > 0 ? 1 : -1;
+
+    // move toward player
+    if (Math.abs(dist) > 60) {
+      this.move(this.facing);
+    }
+
+    // punch if close
+    if (Math.abs(dist) < 70) {
+      this.punch(target);
+    }
+
+    // random jump
+    if (Math.random() < 0.01 && this.onGround) {
+      this.jump();
+    }
+  }
 }
 
-const p1 = new Fighter(200, "black");
-const p2 = new Fighter(600, "red");
+// PLAYER + AI
+const player = new Fighter(200, "black", false);
+const enemy = new Fighter(600, "red", true);
 
+// controls
 document.addEventListener("keydown", (e) => {
 
-  // PLAYER 1
-  if (e.key === "a") p1.move(-1);
-  if (e.key === "d") p1.move(1);
-  if (e.key === "w") p1.jump();
-  if (e.key === " ") p1.punch(p2);
-
-  // PLAYER 2
-  if (e.key === "ArrowLeft") p2.move(-1);
-  if (e.key === "ArrowRight") p2.move(1);
-  if (e.key === "ArrowUp") p2.jump();
-  if (e.key === "Enter") p2.punch(p1);
+  // PLAYER ONLY
+  if (e.key === "a") player.move(-1);
+  if (e.key === "d") player.move(1);
+  if (e.key === "w") player.jump();
+  if (e.key === " ") player.punch(enemy);
 });
 
 function drawGround() {
   ctx.strokeStyle = "#aaa";
-  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(0, 360);
   ctx.lineTo(800, 360);
@@ -168,8 +188,8 @@ function drawGround() {
 function drawUI() {
   ctx.fillStyle = "black";
   ctx.font = "16px Arial";
-  ctx.fillText("P1 HP: " + p1.health, 20, 20);
-  ctx.fillText("P2 HP: " + p2.health, 650, 20);
+  ctx.fillText("PLAYER HP: " + player.health, 20, 20);
+  ctx.fillText("ENEMY HP: " + enemy.health, 600, 20);
 }
 
 function loop() {
@@ -177,11 +197,14 @@ function loop() {
 
   drawGround();
 
-  p1.update();
-  p2.update();
+  player.update();
+  enemy.update();
 
-  p1.draw();
-  p2.draw();
+  // 🤖 AI runs here
+  enemy.ai(player);
+
+  player.draw();
+  enemy.draw();
 
   drawUI();
 
