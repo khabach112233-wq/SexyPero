@@ -2,183 +2,142 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Photo Gallery</title>
-
+<title>Pixel Fighter</title>
 <style>
-body {
+  body {
     margin: 0;
-    font-family: Arial;
-    background: #0f172a;
-    color: white;
-}
-
-/* HEADER */
-header {
-    text-align: center;
-    padding: 40px;
-}
-
-h1 {
-    margin-bottom: 10px;
-}
-
-/* CONTROLS */
-.controls {
+    background: #111;
     display: flex;
     justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 10px;
-}
-
-button, label {
-    background: #1e293b;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    border: none;
-}
-
-button:hover, label:hover {
-    background: #3b82f6;
-}
-
-/* HIDE FILE INPUT */
-input[type="file"] {
-    display: none;
-}
-
-/* GALLERY */
-.gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 10px;
-    padding: 20px;
-}
-
-.item {
-    position: relative;
-    overflow: hidden;
-    border-radius: 12px;
-    cursor: pointer;
-}
-
-.item img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    transition: 0.3s;
-}
-
-.item:hover img {
-    transform: scale(1.05);
-}
-
-/* LIGHTBOX */
-.lightbox {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    justify-content: center;
     align-items: center;
-}
-
-.lightbox img {
-    max-width: 90%;
-    max-height: 90%;
-}
-
-.close {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    font-size: 40px;
-    cursor: pointer;
-}
+    height: 100vh;
+  }
+  canvas {
+    background: #222;
+    border: 3px solid #555;
+    image-rendering: pixelated;
+  }
 </style>
 </head>
-
 <body>
 
-<header>
-    <h1>📸 My Photo Gallery</h1>
-    <p>Upload and view your memories</p>
-</header>
-
-<div class="controls">
-
-    <!-- Upload Button -->
-    <label for="upload">+ Upload Image</label>
-    <input type="file" id="upload" accept="image/*">
-
-    <button onclick="clearGallery()">Clear</button>
-
-</div>
-
-<div class="gallery" id="gallery"></div>
-
-<!-- LIGHTBOX -->
-<div class="lightbox" id="lightbox">
-    <span class="close">&times;</span>
-    <img id="lightboxImg">
-</div>
+<canvas id="game" width="800" height="400"></canvas>
 
 <script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-const upload = document.getElementById("upload");
-const gallery = document.getElementById("gallery");
-const lightbox = document.getElementById("lightbox");
-const lightboxImg = document.getElementById("lightboxImg");
+// simple fighter class
+class Fighter {
+  constructor(x, color, controls) {
+    this.x = x;
+    this.y = 300;
+    this.w = 40;
+    this.h = 60;
+    this.vy = 0;
+    this.color = color;
+    this.health = 100;
+    this.isPunching = false;
 
-// LOAD IMAGE FROM DEVICE
-upload.addEventListener("change", function () {
+    this.controls = controls;
+    this.speed = 4;
+  }
 
-    const file = this.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = function (e) {
-
-        const div = document.createElement("div");
-        div.classList.add("item");
-
-        const img = document.createElement("img");
-        img.src = e.target.result;
-
-        div.appendChild(img);
-        gallery.appendChild(div);
-
-        // click to open lightbox
-        div.addEventListener("click", () => {
-            lightbox.style.display = "flex";
-            lightboxImg.src = img.src;
-        });
-
-    };
-
-    reader.readAsDataURL(file);
-});
-
-// LIGHTBOX CLOSE
-document.querySelector(".close").onclick = () => {
-    lightbox.style.display = "none";
-};
-
-lightbox.onclick = (e) => {
-    if (e.target === lightbox) {
-        lightbox.style.display = "none";
+  update() {
+    // gravity
+    this.y += this.vy;
+    if (this.y < 300) this.vy += 0.8;
+    else {
+      this.vy = 0;
+      this.y = 300;
     }
-};
 
-// CLEAR GALLERY
-function clearGallery() {
-    gallery.innerHTML = "";
+    // punch reset
+    if (this.isPunching) {
+      setTimeout(() => this.isPunching = false, 200);
+    }
+  }
+
+  draw() {
+    ctx.fillStyle = this.color;
+
+    // body
+    ctx.fillRect(this.x, this.y, this.w, this.h);
+
+    // arm (punch effect)
+    if (this.isPunching) {
+      ctx.fillRect(this.x + this.w, this.y + 20, 20, 10);
+    }
+  }
+
+  punch(opponent) {
+    if (Math.abs(this.x - opponent.x) < 50) {
+      opponent.health -= 10;
+    }
+    this.isPunching = true;
+  }
 }
 
+// players
+const p1 = new Fighter(100, "red", {
+  left: "a",
+  right: "d",
+  punch: "w",
+  jump: "s"
+});
+
+const p2 = new Fighter(600, "blue", {
+  left: "ArrowLeft",
+  right: "ArrowRight",
+  punch: "ArrowUp",
+  jump: "ArrowDown"
+});
+
+// input
+const keys = {};
+
+window.addEventListener("keydown", (e) => {
+  keys[e.key] = true;
+
+  // player 1
+  if (e.key === p1.controls.left) p1.x -= p1.speed;
+  if (e.key === p1.controls.right) p1.x += p1.speed;
+  if (e.key === p1.controls.jump && p1.y === 300) p1.vy = -12;
+  if (e.key === p1.controls.punch) p1.punch(p2);
+
+  // player 2
+  if (e.key === p2.controls.left) p2.x -= p2.speed;
+  if (e.key === p2.controls.right) p2.x += p2.speed;
+  if (e.key === p2.controls.jump && p2.y === 300) p2.vy = -12;
+  if (e.key === p2.controls.punch) p2.punch(p1);
+});
+
+function drawHealth() {
+  ctx.fillStyle = "white";
+  ctx.fillText("P1 HP: " + p1.health, 20, 20);
+  ctx.fillText("P2 HP: " + p2.health, 650, 20);
+}
+
+// game loop
+function loop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // ground
+  ctx.fillStyle = "#333";
+  ctx.fillRect(0, 360, 800, 40);
+
+  p1.update();
+  p2.update();
+
+  p1.draw();
+  p2.draw();
+
+  drawHealth();
+
+  requestAnimationFrame(loop);
+}
+
+loop();
 </script>
 
 </body>
